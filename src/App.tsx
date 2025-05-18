@@ -2,11 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "./styles.css";
 
-// 🔐 Use your own Mapbox access token
-mapboxgl.accessToken =
-  "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg";
+// 🔐 Mapbox token
+mapboxgl.accessToken = "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTIzdHRhRHN..."; // Replace with your full key
 
-// Define stop structure
+// 🧱 Type definition
 type StopData = {
   stop_name: string;
   latitude: number;
@@ -18,7 +17,7 @@ export default function App() {
   const map = useRef<mapboxgl.Map | null>(null);
   const [stops, setStops] = useState<StopData[]>([]);
 
-  // Replace with your actual walk_id
+  // ⬇️ Set walk ID manually or read from URL
   const walkId = 4611;
 
   useEffect(() => {
@@ -33,29 +32,28 @@ export default function App() {
 
     map.current = mapInstance;
 
-    mapInstance.on("load", () => {
-      console.log("🗺️ Map loaded. Fetching stops...");
+    mapInstance.on("load", async () => {
+      console.log("🗺️ Map loaded");
 
-      // Fetch from Xano API
-      fetch(
-        `https://x66j-cuug-y5uh.f2.xano.io/api:lu0ifxVo/stop_translations?walk_id=${walkId}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("✅ Stops loaded:", data);
-          setStops(data);
+      try {
+        const response = await fetch(
+          `https://https://x66j-cuqg-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
+        );
+        const data = await response.json();
+        setStops(data);
 
-          // Add markers
-          data.forEach((stop: StopData) => {
-            new mapboxgl.Marker()
-              .setLngLat([stop.longitude, stop.latitude])
-              .setPopup(new mapboxgl.Popup().setText(stop.stop_name))
-              .addTo(mapInstance);
-          });
-        })
-        .catch((err) => console.error("❌ Failed to load stops:", err));
+        // 📍 Add markers
+        data.forEach((stop: StopData) => {
+          new mapboxgl.Marker()
+            .setLngLat([stop.longitude, stop.latitude])
+            .setPopup(new mapboxgl.Popup().setText(stop.stop_name))
+            .addTo(mapInstance);
+        });
+      } catch (err) {
+        console.error("❌ Error fetching stops", err);
+      }
     });
-  }, []);
+  }, [walkId]);
 
   return (
     <div>
