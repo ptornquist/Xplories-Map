@@ -41,7 +41,7 @@ export default function App() {
     mapInstance.on("load", async () => {
       try {
         const response = await fetch(
-          `https://x66j-cuqq-y5uh.f2.xano.io/api:LU0ifxVo/stop_translations?walk_id=${walkId}`
+          `https://x66j-cuqq-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
         );
         const data: StopData[] = await response.json();
         console.log("✅ Stops fetched:", data);
