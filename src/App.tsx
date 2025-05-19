@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "./styles.css";
 
-// ✅ Set Mapbox token
+// ✅ Correct token
 mapboxgl.accessToken =
   "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg";
 
@@ -13,21 +13,19 @@ type StopData = {
 };
 
 export default function App() {
-  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapContainer = useRef(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [stops, setStops] = useState<StopData[]>([]);
 
   useEffect(() => {
     const fetchStops = async () => {
-      try {
-        const walkId = new URLSearchParams(window.location.search).get(
-          "walk_id"
-        );
-        if (!walkId) {
-          console.error("❌ Missing walk_id");
-          return;
-        }
+      const walkId = new URLSearchParams(window.location.search).get("walk_id");
+      if (!walkId) {
+        console.error("❌ Missing walk_id in URL");
+        return;
+      }
 
+      try {
         const response = await fetch(
           `https://x66j-cuqq-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
         );
@@ -46,7 +44,7 @@ export default function App() {
     if (!mapContainer.current || map.current || stops.length === 0) return;
 
     const mapInstance = new mapboxgl.Map({
-      container: mapContainer.current,
+      container: mapContainer.current as HTMLElement,
       style: "mapbox://styles/mapbox/streets-v11",
       center: [18.0686, 59.3293],
       zoom: 13,
@@ -61,7 +59,6 @@ export default function App() {
         new mapboxgl.Marker({ anchor: "bottom" })
           .setLngLat([longitude, latitude])
           .addTo(mapInstance);
-
         bounds.extend([longitude, latitude]);
       });
 

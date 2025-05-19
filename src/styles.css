@@ -1,11 +1,8 @@
 html,
-body {
+body,
+#root {
   margin: 0;
   padding: 0;
-  height: 100%;
-}
-
-#root {
   height: 100%;
 }
 
@@ -14,5 +11,5 @@ body {
   top: 0;
   bottom: 0;
   width: 100%;
-  height: 100%; /* ✅ REQUIRED! */
+  height: 100%; /* REQUIRED */
 }
