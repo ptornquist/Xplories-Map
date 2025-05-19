@@ -18,7 +18,7 @@ export default function App() {
   const map = useRef<mapboxgl.Map | null>(null);
   const [stops, setStops] = useState<StopData[]>([]);
 
-  // ✅ Fetch stops from Xano
+  // Fetch stops from Xano
   useEffect(() => {
     const fetchStops = async () => {
       const walkId = new URLSearchParams(window.location.search).get("walk_id");
@@ -42,7 +42,7 @@ export default function App() {
     fetchStops();
   }, []);
 
-  // ✅ Initialize map and render pins when stops are ready
+  // Initialize map and render pins when stops are ready
   useEffect(() => {
     if (!stops.length || map.current || !mapContainer.current) return;
 
@@ -71,5 +71,13 @@ export default function App() {
     });
   }, [stops]);
 
-  return <div ref={mapContainer} className="map-container" />;
+  return (
+    <div>
+      <div
+        ref={mapContainer}
+        style={{ width: "100vw", height: "100vh" }}
+        id="map"
+      />
+    </div>
+  );
 }
