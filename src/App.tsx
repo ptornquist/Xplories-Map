@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "./styles.css";
 
-// ✅ Correct token
+// ✅ Set Mapbox token
 mapboxgl.accessToken =
   "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg";
 
@@ -13,7 +13,7 @@ type StopData = {
 };
 
 export default function App() {
-  const mapContainer = useRef(null);
+  const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [stops, setStops] = useState<StopData[]>([]);
 
@@ -24,19 +24,18 @@ export default function App() {
           "walk_id"
         );
         if (!walkId) {
-          console.error("❌ Missing walk_id in URL");
+          console.error("❌ Missing walk_id");
           return;
         }
 
         const response = await fetch(
-          `https://x66j-cuqq-y5uh.f2.xano.io/api:lu0ifxVo/stop_translations?walk_id=${walkId}`
+          `https://x66j-cuqq-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
         );
-
         const data = await response.json();
         console.log("✅ Fetched stops:", data);
         setStops(data);
       } catch (error) {
-        console.error("❌ Failed to fetch stops:", error);
+        console.error("❌ Fetch error:", error);
       }
     };
 
@@ -47,7 +46,7 @@ export default function App() {
     if (!mapContainer.current || map.current || stops.length === 0) return;
 
     const mapInstance = new mapboxgl.Map({
-      container: mapContainer.current!,
+      container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
       center: [18.0686, 59.3293],
       zoom: 13,
