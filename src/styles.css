@@ -1,12 +1,4 @@
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
 .map-container {
-  height: 100vh; /* Full viewport height */
   width: 100%;
-  position: relative;
+  height: 100vh;
 }
