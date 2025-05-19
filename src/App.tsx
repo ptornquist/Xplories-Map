@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
-import "./styles.css"; // Make sure this file contains .map-container CSS
+import "./styles.css";
 
-// 🔐 Mapbox access token
+// ✅ Set your Mapbox access token here
 mapboxgl.accessToken =
-  "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg";
+  "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg"; // Replace this
 
-// 🧱 Define structure for stop data
 type StopData = {
   stop_name: string;
   latitude: number;
   longitude: number;
+  stop_image_url: string;
+  order: number;
 };
 
 export default function App() {
@@ -19,7 +20,7 @@ export default function App() {
   const [stops, setStops] = useState<StopData[]>([]);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (map.current || !mapContainer.current) return;
 
     const urlParams = new URLSearchParams(window.location.search);
     const walkId = urlParams.get("walk_id");
@@ -32,7 +33,7 @@ export default function App() {
     const mapInstance = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [0, 0],
+      center: [18.0686, 59.3293], // Default: Stockholm
       zoom: 2,
     });
 
@@ -41,66 +42,48 @@ export default function App() {
     mapInstance.on("load", async () => {
       try {
         const response = await fetch(
-          `https://x66j-cuqq-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
+          `https://x66j-cuqg-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
         );
         const data: StopData[] = await response.json();
+
         console.log("✅ Stops fetched:", data);
         setStops(data);
 
-        if (!data || data.length === 0) {
+        if (data.length === 0) {
           console.warn("⚠️ No stops returned. Showing fallback.");
-          mapInstance.setCenter([18.0686, 59.3293]); // Stockholm
+          mapInstance.setCenter([18.0686, 59.3293]);
           mapInstance.setZoom(14);
           return;
         }
 
+        // Fit map to bounds of stops
         const bounds = new mapboxgl.LngLatBounds();
-        let hasValidCoords = false;
-
         data.forEach((stop) => {
-          if (
-            typeof stop.latitude === "number" &&
-            typeof stop.longitude === "number"
-          ) {
-            console.log(
-              `📍 Adding marker: ${stop.stop_name}`,
-              stop.latitude,
-              stop.longitude
-            );
-            bounds.extend([stop.longitude, stop.latitude]);
-            hasValidCoords = true;
-
-            new mapboxgl.Marker()
-              .setLngLat([stop.longitude, stop.latitude])
-              .setPopup(new mapboxgl.Popup().setText(stop.stop_name))
-              .addTo(mapInstance);
-          } else {
-            console.warn("🚫 Invalid coordinates for stop:", stop);
-          }
+          bounds.extend([stop.longitude, stop.latitude]);
         });
 
-        if (hasValidCoords) {
-          mapInstance.fitBounds(bounds, { padding: 50 });
-        } else {
-          console.warn("⚠️ No valid coordinates found. Showing fallback.");
-          mapInstance.setCenter([18.0686, 59.3293]);
-          mapInstance.setZoom(14);
-        }
+        mapInstance.fitBounds(bounds, { padding: 50 });
+
+        // Add markers
+        data.forEach((stop) => {
+          new mapboxgl.Marker()
+            .setLngLat([stop.longitude, stop.latitude])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(`<strong>${stop.stop_name}</strong>`)
+            )
+            .addTo(mapInstance);
+        });
       } catch (error) {
         console.error("❌ Failed to fetch or render stops:", error);
         mapInstance.setCenter([18.0686, 59.3293]);
         mapInstance.setZoom(14);
       }
     });
-
-    return () => {
-      mapInstance.remove();
-    };
   }, []);
 
   return (
     <div>
-      <h2>Xplories Map</h2>
+      <h1>Xplories Map</h1>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
