@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import "./styles.css";
 
-// ✅ Set your Mapbox access token
+// ✅ Your Mapbox access token
 mapboxgl.accessToken =
   "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg";
 
@@ -13,15 +14,9 @@ type StopData = {
 };
 
 export default function App() {
-  const mapContainer = useRef<HTMLDivElement | null>(null);
+  const mapContainer = useRef(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [stops, setStops] = useState<StopData[]>([]);
-  const [containerReady, setContainerReady] = useState(false);
-
-  // ✅ Detect container mount
-  useEffect(() => {
-    if (mapContainer.current) setContainerReady(true);
-  }, []);
 
   // ✅ Fetch stops from Xano
   useEffect(() => {
@@ -34,7 +29,7 @@ export default function App() {
 
       try {
         const response = await fetch(
-          `https://x66j-cuqq-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
+          `https://x66j-cuqg-y5uh.f2.xano.io/api:lU0ifxVo/stop_translations?walk_id=${walkId}`
         );
         const data = await response.json();
         console.log("✅ Fetched stops:", data);
@@ -47,14 +42,14 @@ export default function App() {
     fetchStops();
   }, []);
 
-  // ✅ Initialize map
+  // ✅ Initialize map and render pins when stops are ready
   useEffect(() => {
-    if (!containerReady || !stops.length || map.current) return;
+    if (!stops.length || map.current || !mapContainer.current) return;
 
     const mapInstance = new mapboxgl.Map({
-      container: mapContainer.current!,
+      container: mapContainer.current as HTMLElement,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [18.0686, 59.3293],
+      center: [18.0686, 59.3293], // Default to Stockholm
       zoom: 13,
     });
 
@@ -74,7 +69,7 @@ export default function App() {
         mapInstance.fitBounds(bounds, { padding: 60 });
       }
     });
-  }, [containerReady, stops]);
+  }, [stops]);
 
   return <div ref={mapContainer} className="map-container" />;
 }
