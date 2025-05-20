@@ -3,7 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./styles.css";
 
-// ✅ Your Mapbox access token
+// Mapbox access token
 mapboxgl.accessToken =
   "pk.eyJ1IjoicHRvcm5xdWlzdCIsImEiOiJjbTlzdHRhNDIwMjk5MmxzZDN0cHU1cGZuIn0.eija5tq3j-2wDB9NN651dg";
 
@@ -14,11 +14,11 @@ type StopData = {
 };
 
 export default function App() {
-  const mapContainer = useRef(null);
+  const mapContainer = useRef<HTMLDivElement | null>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [stops, setStops] = useState<StopData[]>([]);
 
-  // Fetch stops from Xano
+  // Fetch stops from API
   useEffect(() => {
     const fetchStops = async () => {
       const walkId = new URLSearchParams(window.location.search).get("walk_id");
@@ -42,14 +42,13 @@ export default function App() {
     fetchStops();
   }, []);
 
-  // Initialize map and render pins when stops are ready
+  // Initialize map after stops loaded
   useEffect(() => {
     if (!stops.length || map.current || !mapContainer.current) return;
 
     const mapInstance = new mapboxgl.Map({
-      container: mapContainer.current as HTMLElement,
+      container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [18.0686, 59.3293], // Default to Stockholm
       zoom: 13,
     });
 
@@ -58,10 +57,21 @@ export default function App() {
     mapInstance.on("load", () => {
       const bounds = new mapboxgl.LngLatBounds();
 
-      stops.forEach(({ latitude, longitude }) => {
-        new mapboxgl.Marker({ anchor: "bottom" })
+      stops.forEach(({ latitude, longitude, stop_name }) => {
+        // Create marker
+        const marker = new mapboxgl.Marker({ anchor: "bottom" })
           .setLngLat([longitude, latitude])
           .addTo(mapInstance);
+
+        // Create popup for the marker
+        const popup = new mapboxgl.Popup({ offset: 25 }).setText(stop_name);
+
+        // Attach popup to marker on click
+        marker.getElement().addEventListener("click", () => {
+          popup.addTo(mapInstance).setLngLat([longitude, latitude]);
+        });
+
+        // Extend map bounds
         bounds.extend([longitude, latitude]);
       });
 
@@ -69,15 +79,18 @@ export default function App() {
         mapInstance.fitBounds(bounds, { padding: 60 });
       }
     });
+
+    return () => {
+      mapInstance.remove(); // Cleanup on unmount or stops change
+      map.current = null;
+    };
   }, [stops]);
 
   return (
-    <div>
-      <div
-        ref={mapContainer}
-        style={{ width: "100vw", height: "100vh" }}
-        id="map"
-      />
-    </div>
+    <div
+      ref={mapContainer}
+      style={{ width: "100vw", height: "100vh" }}
+      id="map"
+    />
   );
 }
